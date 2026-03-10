@@ -24,7 +24,8 @@ _PURCHASE_ACCOUNT_TYPES = (
 )
 
 _TEXT_COLUMNS = frozenset({
-    "extbelegnr", "text", "gegenbuchkz", "verbuchkz", "symbol", "beleglink",
+    "rechnungsnr", "extbelegnr", "text", "gegenbuchkz", "verbuchkz",
+    "symbol", "beleglink",
 })
 
 
@@ -255,6 +256,17 @@ class BmdInvoiceExportWizard(models.TransientModel):
             return BMD_STEUCOD_MIXED
         return all_rates.pop() if all_rates else 0
 
+    def _get_partner_account_code(self, move, is_sale):
+        """Return the receivable (sales) or payable (purchases) account code."""
+        partner = move.partner_id
+        if not partner:
+            return ""
+        if is_sale:
+            account = partner.property_account_receivable_id
+        else:
+            account = partner.property_account_payable_id
+        return account.code if account else ""
+
     def _get_common_fields(self, move, is_sale, is_refund):
         """Return dict of fields shared by both export modes."""
         partner = move.partner_id
@@ -262,10 +274,12 @@ class BmdInvoiceExportWizard(models.TransientModel):
         last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
         vals = {
             "belegnr": self._get_belegnr_numeric(move.name),
+            "rechnungsnr": move.name or "",
             "belegdat": self._date_to_bmd(move.invoice_date),
             "extbelegnr": (move.ref or "")[:20],
             "steucod": str(self._get_bmd_steucod(move)),
             "gkto": partner.bmd_kontonummer if partner else "",
+            "personenkonto": self._get_partner_account_code(move, is_sale),
             "gegenbuchkz": "E",
             "verbuchkz": "A",
             "kost": self._get_belegnr_numeric(move.name),
@@ -347,16 +361,17 @@ class BmdInvoiceExportWizard(models.TransientModel):
             columns = [m.bmd_field_name for m in mappings]
         elif self.export_mode == "per_invoice":
             columns = [
-                "belegnr", "belegdat", "extbelegnr", "netto", "brutto",
-                "steuer", "bucod", "steucod", "gkto", "konto", "mwst",
-                "text", "gegenbuchkz", "verbuchkz", "kost", "symbol",
-                "buchdat",
+                "belegnr", "rechnungsnr", "belegdat", "extbelegnr", "netto",
+                "brutto", "steuer", "bucod", "steucod", "gkto",
+                "personenkonto", "konto", "mwst", "text", "gegenbuchkz",
+                "verbuchkz", "kost", "symbol", "buchdat",
             ]
         else:
             columns = [
-                "belegnr", "belegdat", "extbelegnr", "betrag", "bucod",
-                "steucod", "gkto", "konto", "mwst", "steuer", "text",
-                "gegenbuchkz", "verbuchkz", "kost", "symbol", "buchdat",
+                "belegnr", "rechnungsnr", "belegdat", "extbelegnr", "betrag",
+                "bucod", "steucod", "gkto", "personenkonto", "konto", "mwst",
+                "steuer", "text", "gegenbuchkz", "verbuchkz", "kost",
+                "symbol", "buchdat",
             ]
         if self.include_pdfs and "beleglink" not in columns:
             columns.append("beleglink")
