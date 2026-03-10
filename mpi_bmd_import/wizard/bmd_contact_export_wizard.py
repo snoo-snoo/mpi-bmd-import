@@ -110,17 +110,26 @@ class BmdContactExportWizard(models.TransientModel):
         return rows
 
     def _export_csv(self, partners):
-        """Export to CSV."""
+        """Export to CSV. Numeric-only values stay unquoted, text is quoted."""
         rows = self._build_csv_rows(partners)
+        if not rows:
+            return b""
         delimiter = self.config_id.get_delimiter_char()
         encoding = self.config_id.encoding
 
-        output = io.StringIO()
-        writer = csv.writer(output, delimiter=delimiter, quoting=csv.QUOTE_ALL)
-        for row in rows:
-            writer.writerow(row)
+        header = delimiter.join(f'"{col}"' for col in rows[0])
+        lines = [header]
+        for row in rows[1:]:
+            cells = []
+            for val in row:
+                s = str(val) if val is not None else ""
+                if s and s.replace("-", "", 1).isdigit():
+                    cells.append(s)
+                else:
+                    cells.append('"' + s.replace('"', '""') + '"')
+            lines.append(delimiter.join(cells))
 
-        return output.getvalue().encode(encoding, errors="replace")
+        return "\r\n".join(lines).encode(encoding, errors="replace")
 
     def _export_xlsx(self, partners):
         """Export to Excel using openpyxl."""

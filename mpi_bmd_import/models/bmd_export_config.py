@@ -34,7 +34,7 @@ class BmdExportConfig(models.Model):
             ("cp1252", "Windows-1252"),
         ],
         string="Encoding",
-        default="utf-8",
+        default="utf-8-sig",
     )
     header_mapping_ids = fields.One2many(
         "bmd.header.mapping",
