@@ -5,7 +5,7 @@
         <record id="bmd_export_config_default" model="bmd.export.config">
             <field name="name">Default BMD Export</field>
             <field name="delimiter">semicolon</field>
-            <field name="encoding">utf-8</field>
+            <field name="encoding">utf-8-sig</field>
         </record>
 
         <!-- Buchungen (Invoices) default mappings -->
