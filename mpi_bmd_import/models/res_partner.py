@@ -31,7 +31,7 @@ class ResPartner(models.Model):
             name = name.upper()
             partner.bmd_matchcode = name[:10] if name else ""
 
-    @api.depends("ref", "customer_rank", "supplier_rank", "id")
+    @api.depends("ref", "customer_rank", "supplier_rank")
     def _compute_bmd_kontonummer(self):
         """5-9 digit account number: use ref if numeric, else generate from id."""
         for partner in self:
