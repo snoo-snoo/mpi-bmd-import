@@ -21,6 +21,10 @@ BMD_STEUCOD_MIXED = 88
 _SALE_ACCOUNT_TYPES = ("income", "income_other")
 _PURCHASE_ACCOUNT_TYPES = ("expense", "expense_depreciation", "expense_direct_cost")
 
+_TEXT_COLUMNS = frozenset({
+    "extbelegnr", "text", "gegenbuchkz", "verbuchkz", "symbol", "beleglink",
+})
+
 
 class BmdInvoiceExportWizard(models.TransientModel):
     _name = "bmd.invoice.export.wizard"
@@ -366,18 +370,35 @@ class BmdInvoiceExportWizard(models.TransientModel):
                 rows.append(row)
         return rows
 
+    @staticmethod
+    def _format_csv_value(value, quoted):
+        """Format a single CSV cell: quote text values, leave numbers bare."""
+        val = str(value) if value is not None else ""
+        if quoted:
+            return '"' + val.replace('"', '""') + '"'
+        return val
+
     def _export_csv(self, moves):
-        """Export to CSV with header row."""
+        """Export to CSV with header row. Text columns are quoted, numbers are not."""
+        columns = self._get_columns()
         rows = self._build_csv_rows(moves)
         delimiter = self.config_id.get_delimiter_char()
         encoding = self.config_id.encoding
 
-        output = io.StringIO()
-        writer = csv.writer(output, delimiter=delimiter, quoting=csv.QUOTE_ALL)
-        for row in rows:
-            writer.writerow(row)
+        lines = []
+        header = delimiter.join(
+            f'"{col}"' for col in columns
+        )
+        lines.append(header)
 
-        return output.getvalue().encode(encoding, errors="replace")
+        for row in rows[1:]:
+            cells = [
+                self._format_csv_value(val, col in _TEXT_COLUMNS)
+                for col, val in zip(columns, row)
+            ]
+            lines.append(delimiter.join(cells))
+
+        return "\r\n".join(lines).encode(encoding, errors="replace")
 
     def _export_xlsx(self, moves):
         """Export to Excel using openpyxl."""
