@@ -4,6 +4,8 @@ import re
 
 from odoo import api, fields, models
 
+_UMLAUT_MAP = [("Ä", "AE"), ("Ö", "OE"), ("Ü", "UE")]
+
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
@@ -21,11 +23,12 @@ class ResPartner(models.Model):
 
     @api.depends("name")
     def _compute_bmd_matchcode(self):
-        """First 10 chars of name in uppercase for BMD Matchcode."""
+        """First 10 chars of name in uppercase, umlauts transliterated."""
         for partner in self:
-            name = (partner.name or "").upper()
-            for old, new in [("Ä", "A"), ("Ö", "O"), ("Ü", "U"), ("ß", "SS")]:
-                name = name.replace(old, new)
+            name = (partner.name or "")
+            for old, new in _UMLAUT_MAP:
+                name = name.replace(old.lower(), new).replace(old, new)
+            name = name.upper()
             partner.bmd_matchcode = name[:10] if name else ""
 
     @api.depends("ref", "customer_rank", "supplier_rank", "id")
@@ -34,10 +37,12 @@ class ResPartner(models.Model):
         for partner in self:
             if partner.ref and re.match(r"^\d{5,9}$", str(partner.ref).strip()):
                 partner.bmd_kontonummer = str(partner.ref).strip()
-            else:
+            elif isinstance(partner.id, int) and partner.id:
                 prefix = (
                     100000
                     if partner.customer_rank or not partner.supplier_rank
                     else 200000
                 )
                 partner.bmd_kontonummer = str(prefix + partner.id)[:9]
+            else:
+                partner.bmd_kontonummer = ""

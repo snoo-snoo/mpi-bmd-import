@@ -1,7 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_bmd_export_config_user,bmd.export.config.user,model_bmd_export_config,account.group_account_user,1,1,1,1
+access_bmd_export_config_user,bmd.export.config.user,model_bmd_export_config,account.group_account_user,1,0,0,0
 access_bmd_export_config_manager,bmd.export.config.manager,model_bmd_export_config,account.group_account_manager,1,1,1,1
-access_bmd_header_mapping_user,bmd.header.mapping.user,model_bmd_header_mapping,account.group_account_user,1,1,1,1
+access_bmd_header_mapping_user,bmd.header.mapping.user,model_bmd_header_mapping,account.group_account_user,1,0,0,0
 access_bmd_header_mapping_manager,bmd.header.mapping.manager,model_bmd_header_mapping,account.group_account_manager,1,1,1,1
 access_bmd_invoice_export_wizard_user,bmd.invoice.export.wizard.user,model_bmd_invoice_export_wizard,account.group_account_user,1,1,1,1
 access_bmd_contact_export_wizard_user,bmd.contact.export.wizard.user,model_bmd_contact_export_wizard,account.group_account_user,1,1,1,1

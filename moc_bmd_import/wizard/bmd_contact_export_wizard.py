@@ -2,10 +2,13 @@
 
 import csv
 import io
+import logging
 from base64 import b64encode
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class BmdContactExportWizard(models.TransientModel):
@@ -58,7 +61,11 @@ class BmdContactExportWizard(models.TransientModel):
         return config
 
     def _get_partners(self):
-        domain = []
+        domain = [
+            "|",
+            ("company_id", "=", self.env.company.id),
+            ("company_id", "=", False),
+        ]
         if self.partner_type == "customer":
             domain.append(("customer_rank", ">", 0))
         elif self.partner_type == "supplier":
@@ -78,6 +85,13 @@ class BmdContactExportWizard(models.TransientModel):
         """Get value for a partner field, handling special cases."""
         if field_name == "country_id":
             return partner.country_id.code or ""
+        if field_name not in partner._fields:
+            _logger.warning(
+                "BMD contact export: field '%s' not found on res.partner, "
+                "returning empty value.",
+                field_name,
+            )
+            return ""
         return getattr(partner, field_name, "") or ""
 
     def _build_csv_rows(self, partners):
@@ -140,6 +154,12 @@ class BmdContactExportWizard(models.TransientModel):
         partners = self._get_partners()
         if not partners:
             raise UserError(_("No partners match the selected criteria."))
+
+        _logger.info(
+            "BMD contact export: %d partners, type=%s, format=%s, user=%s",
+            len(partners), self.partner_type,
+            self.export_format, self.env.user.login,
+        )
 
         if self.export_format == "csv":
             data = self._export_csv(partners)

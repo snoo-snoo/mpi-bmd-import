@@ -3,6 +3,7 @@
 import calendar
 import csv
 import io
+import logging
 import re
 from base64 import b64encode
 from datetime import datetime
@@ -10,11 +11,14 @@ from datetime import datetime
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+_logger = logging.getLogger(__name__)
 
-# BMD steucod mapping (Austrian tax codes)
-BMD_STEUCOD_SALE = 3  # Soll-Umsatzsteuer
-BMD_STEUCOD_PURCHASE = 0  # Vorsteuer
-BMD_STEUCOD_MIXED = 88  # Gemischter Steuersatz
+BMD_STEUCOD_SALE = 3
+BMD_STEUCOD_PURCHASE = 0
+BMD_STEUCOD_MIXED = 88
+
+_SALE_ACCOUNT_TYPES = ("income", "income_other")
+_PURCHASE_ACCOUNT_TYPES = ("expense", "expense_depreciation", "expense_direct_cost")
 
 
 class BmdInvoiceExportWizard(models.TransientModel):
@@ -95,7 +99,7 @@ class BmdInvoiceExportWizard(models.TransientModel):
             return "AR"
         return "ER"
 
-    def _get_bmd_steucod(self, move, is_refund):
+    def _get_bmd_steucod(self, move):
         if move.move_type in ("out_invoice", "out_refund"):
             return BMD_STEUCOD_SALE
         return BMD_STEUCOD_PURCHASE
@@ -126,10 +130,10 @@ class BmdInvoiceExportWizard(models.TransientModel):
         is_sale = move.move_type in ("out_invoice", "out_refund")
 
         income_lines = move.line_ids.filtered(
-            lambda l: l.account_id.account_type in ("income", "income_other")
+            lambda l: l.account_id.account_type in _SALE_ACCOUNT_TYPES
         )
         expense_lines = move.line_ids.filtered(
-            lambda l: l.account_id.account_type in ("expense", "expense_depreciation")
+            lambda l: l.account_id.account_type in _PURCHASE_ACCOUNT_TYPES
         )
         tax_lines = move.line_ids.filtered(lambda l: l.tax_line_id)
 
@@ -154,7 +158,7 @@ class BmdInvoiceExportWizard(models.TransientModel):
 
         partner = move.partner_id
         gkto = partner.bmd_kontonummer if partner else ""
-        steucod = self._get_bmd_steucod(move, is_refund)
+        steucod = self._get_bmd_steucod(move)
 
         inv_date = move.invoice_date or move.date
         last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
@@ -274,11 +278,21 @@ class BmdInvoiceExportWizard(models.TransientModel):
                     "Please create one under Accounting → BMD Export → Export Configuration."
                 )
             )
+        if self.date_from > self.date_to:
+            raise UserError(
+                _("'From Date' must be earlier than or equal to 'To Date'.")
+            )
         moves = self._get_moves()
         if not moves:
             raise UserError(
                 _("No posted invoices match the selected criteria.")
             )
+
+        _logger.info(
+            "BMD invoice export: %d moves, %s–%s, format=%s, user=%s",
+            len(moves), self.date_from, self.date_to,
+            self.export_format, self.env.user.login,
+        )
 
         if self.export_format == "csv":
             data = self._export_csv(moves)

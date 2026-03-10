@@ -20,7 +20,7 @@
                                 <tree editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="bmd_field_name"/>
-                                    <field name="odoo_field_name" invisible="export_type != 'contacts'" optional="show"/>
+                                    <field name="odoo_field_name"/>
                                     <field name="export_type"/>
                                 </tree>
                             </field>

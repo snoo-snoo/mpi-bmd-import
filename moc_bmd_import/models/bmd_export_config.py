@@ -1,6 +1,8 @@
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).
 
-from odoo import api, fields, models
+from odoo import fields, models
+
+_DELIMITER_MAP = {"tab": "\t", "semicolon": ";", "comma": ","}
 
 
 class BmdExportConfig(models.Model):
@@ -42,4 +44,5 @@ class BmdExportConfig(models.Model):
 
     def get_delimiter_char(self):
         """Return the actual delimiter character for CSV writing."""
-        return {"tab": "\t", "semicolon": ";", "comma": ","}[self.delimiter]
+        self.ensure_one()
+        return _DELIMITER_MAP[self.delimiter]
