@@ -35,15 +35,15 @@ class BmdHeaderMapping(models.Model):
         string="Export Type",
         required=True,
     )
-    model = fields.Char(
+    target_model = fields.Char(
         string="Model",
-        compute="_compute_model",
+        compute="_compute_target_model",
         store=True,
     )
 
     @api.depends("export_type")
-    def _compute_model(self):
+    def _compute_target_model(self):
         for rec in self:
-            rec.model = (
+            rec.target_model = (
                 "account.move" if rec.export_type == "invoices" else "res.partner"
             )
