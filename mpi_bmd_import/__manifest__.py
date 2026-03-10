@@ -8,6 +8,7 @@
     "author": "MPI GmbH, Michael Plöckinger - www.mpi-erp.at",
     "website": "https://www.mpi-erp.at",
     "license": "LGPL-3",
+    "images": ["static/description/banner.png"],
     "depends": ["account", "l10n_at"],
     "data": [
         "security/ir.model.access.csv",
