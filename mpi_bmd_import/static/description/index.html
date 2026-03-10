@@ -1,0 +1,166 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color: #875A7B;">BMD Import/Export</h2>
+            <h3 class="oe_slogan">Export Odoo accounting data to BMD-compatible CSV/Excel format for Austrian accounting</h3>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <div class="oe_demo oe_picture oe_screenshot" style="text-align: center;">
+                <img src="banner.png" alt="BMD Export Banner" style="max-width: 100%;"/>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan" style="color: #875A7B;">Key Features</h3>
+        <div class="oe_span6">
+            <div class="text-center" style="padding: 16px;">
+                <div style="font-size: 40px; color: #875A7B; margin-bottom: 8px;">
+                    <i class="fa fa-file-text-o"></i>
+                </div>
+                <h4>Invoice Export (Buchungen)</h4>
+                <p>Export customer invoices, supplier invoices, credit notes and refunds
+                   in BMD "Buchungen" format with correct tax codes, account numbers
+                   and booking dates.</p>
+            </div>
+        </div>
+        <div class="oe_span6">
+            <div class="text-center" style="padding: 16px;">
+                <div style="font-size: 40px; color: #875A7B; margin-bottom: 8px;">
+                    <i class="fa fa-address-book-o"></i>
+                </div>
+                <h4>Contact Export (Personenkonten)</h4>
+                <p>Export customers and suppliers in BMD "Personenkonten" format
+                   including Kontonummer, Matchcode, address, and UID-Nummer.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan" style="color: #875A7B;">Flexible Configuration</h3>
+        <div class="oe_span4">
+            <div class="text-center" style="padding: 16px;">
+                <div style="font-size: 40px; color: #875A7B; margin-bottom: 8px;">
+                    <i class="fa fa-columns"></i>
+                </div>
+                <h4>Custom Header Mappings</h4>
+                <p>Map BMD column names to Odoo fields with configurable
+                   sequence and export type.</p>
+            </div>
+        </div>
+        <div class="oe_span4">
+            <div class="text-center" style="padding: 16px;">
+                <div style="font-size: 40px; color: #875A7B; margin-bottom: 8px;">
+                    <i class="fa fa-cog"></i>
+                </div>
+                <h4>Delimiter &amp; Encoding</h4>
+                <p>Choose Tab, Semicolon or Comma as CSV delimiter.
+                   Supports UTF-8, UTF-8 with BOM, and Windows-1252 encoding.</p>
+            </div>
+        </div>
+        <div class="oe_span4">
+            <div class="text-center" style="padding: 16px;">
+                <div style="font-size: 40px; color: #875A7B; margin-bottom: 8px;">
+                    <i class="fa fa-file-excel-o"></i>
+                </div>
+                <h4>CSV &amp; Excel Output</h4>
+                <p>Export to plain CSV for direct BMD import, or to Excel
+                   for review and manual adjustments before importing.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan" style="color: #875A7B;">How It Works</h3>
+        <div class="oe_span12">
+            <table class="table" style="max-width: 800px; margin: 0 auto;">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">#</th>
+                        <th>Step</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: center;"><strong>1</strong></td>
+                        <td><strong>Configure</strong></td>
+                        <td>Go to <em>Accounting &rarr; BMD Export &rarr; Export Configuration</em> and set
+                            delimiter, encoding, and header mappings.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><strong>2</strong></td>
+                        <td><strong>Export Invoices</strong></td>
+                        <td>Go to <em>Accounting &rarr; BMD Export &rarr; Export Invoices</em>, select a
+                            date range and document types, then click Export.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><strong>3</strong></td>
+                        <td><strong>Export Contacts</strong></td>
+                        <td>Go to <em>Accounting &rarr; BMD Export &rarr; Export Contacts</em>, choose
+                            customers, suppliers or both, then click Export.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><strong>4</strong></td>
+                        <td><strong>Import into BMD</strong></td>
+                        <td>Import the generated CSV/Excel file into your BMD software
+                            using the standard BMD import wizard.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan" style="color: #875A7B;">Austrian Tax Compliance</h3>
+        <div class="oe_span12">
+            <div style="max-width: 700px; margin: 0 auto;">
+                <ul>
+                    <li>Correct BMD <strong>Steuercodes</strong> for sales tax (Soll-USt) and input tax (Vorsteuer)</li>
+                    <li>Automatic <strong>Kontonummer</strong> generation (5-9 digits) based on partner reference or ID</li>
+                    <li>Proper <strong>Matchcode</strong> transliteration (umlauts &rarr; AE/OE/UE)</li>
+                    <li>UID-Nummer (VAT ID) included in contact export</li>
+                    <li>Multi-company and multi-currency aware</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan" style="color: #875A7B;">Requirements</h3>
+        <div class="oe_span12">
+            <div style="max-width: 700px; margin: 0 auto;">
+                <ul>
+                    <li><strong>Odoo Accounting</strong> (<code>account</code>) module</li>
+                    <li><strong>Austrian Localization</strong> (<code>l10n_at</code>) module</li>
+                    <li><strong>openpyxl &ge; 3.1.0</strong> (only required for Excel export &mdash; add to <code>requirements.txt</code> on Odoo.sh)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12 text-center" style="padding: 24px 0;">
+            <p><strong>Author:</strong> MPI GmbH, Michael Pl&ouml;ckinger</p>
+            <p><a href="https://www.mpi-erp.at" target="_blank">www.mpi-erp.at</a></p>
+            <p><strong>License:</strong> LGPL-3.0 or later</p>
+        </div>
+    </div>
+</section>
