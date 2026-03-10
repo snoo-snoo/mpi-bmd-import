@@ -18,7 +18,9 @@ BMD_STEUCOD_PURCHASE = 0
 BMD_STEUCOD_MIXED = 88
 
 _SALE_ACCOUNT_TYPES = ("income", "income_other")
-_PURCHASE_ACCOUNT_TYPES = ("expense", "expense_depreciation", "expense_direct_cost")
+_PURCHASE_ACCOUNT_TYPES = (
+    "expense", "expense_other", "expense_depreciation", "expense_direct_cost",
+)
 
 
 class BmdInvoiceExportWizard(models.TransientModel):
