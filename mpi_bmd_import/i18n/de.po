@@ -72,70 +72,6 @@ msgid "BMD Export"
 msgstr "BMD-Export"
 
 #. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_export_config_form
-msgid "BMD Export Configuration"
-msgstr "BMD-Exportkonfiguration"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_export_config_tree
-msgid "BMD Export Configurations"
-msgstr "BMD-Exportkonfigurationen"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_export_config_form
-msgid "Header Mappings"
-msgstr "Spaltenzuordnungen"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_export_config_form
-msgid "Create your first BMD export configuration"
-msgstr "Erstellen Sie Ihre erste BMD-Exportkonfiguration"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_export_config_form
-msgid "Configure delimiter, encoding, and header mappings for BMD export."
-msgstr "Konfigurieren Sie Trennzeichen, Zeichenkodierung und Spaltenzuordnungen für den BMD-Export."
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_invoice_export_wizard_form
-msgid "Export Invoices to BMD"
-msgstr "Rechnungen nach BMD exportieren"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_contact_export_wizard_form
-msgid "Export Contacts to BMD"
-msgstr "Kontakte nach BMD exportieren"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_invoice_export_wizard_form
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_contact_export_wizard_form
-msgid "Export"
-msgstr "Exportieren"
-
-#. module: mpi_bmd_import
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_invoice_export_wizard_form
-#: model:ir.ui.view,arch_db:mpi_bmd_import.view_bmd_contact_export_wizard_form
-msgid "Close"
-msgstr "Schließen"
-
-#. module: mpi_bmd_import
-#: model:bmd.export.config,name:mpi_bmd_import.bmd_export_config_default
-msgid "Default BMD Export"
-msgstr "Standard BMD-Export"
-
-#. module: mpi_bmd_import
-#: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_export_config__name
-msgid "Name"
-msgstr "Name"
-
-#. module: mpi_bmd_import
-#: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_export_config__company_id
-#: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_invoice_export_wizard__company_id
-#: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_contact_export_wizard__company_id
-msgid "Company"
-msgstr "Unternehmen"
-
-#. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_export_config__delimiter
 msgid "CSV Delimiter"
 msgstr "CSV-Trennzeichen"
@@ -146,39 +82,9 @@ msgid "BMD standard delimiter; all field values are double-quoted."
 msgstr "BMD-Standard-Trennzeichen; alle Feldwerte werden in Anführungszeichen gesetzt."
 
 #. module: mpi_bmd_import
-#: selection:bmd.export.config,delimiter
-msgid "Tab"
-msgstr "Tabulator"
-
-#. module: mpi_bmd_import
-#: selection:bmd.export.config,delimiter
-msgid "Semicolon"
-msgstr "Semikolon"
-
-#. module: mpi_bmd_import
-#: selection:bmd.export.config,delimiter
-msgid "Comma"
-msgstr "Komma"
-
-#. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_export_config__encoding
 msgid "Encoding"
 msgstr "Zeichenkodierung"
-
-#. module: mpi_bmd_import
-#: selection:bmd.export.config,encoding
-msgid "UTF-8"
-msgstr "UTF-8"
-
-#. module: mpi_bmd_import
-#: selection:bmd.export.config,encoding
-msgid "UTF-8 with BOM"
-msgstr "UTF-8 mit BOM"
-
-#. module: mpi_bmd_import
-#: selection:bmd.export.config,encoding
-msgid "Windows-1252"
-msgstr "Windows-1252"
 
 #. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_export_config__header_mapping_ids
@@ -218,16 +124,6 @@ msgid "Export Type"
 msgstr "Exporttyp"
 
 #. module: mpi_bmd_import
-#: selection:bmd.header.mapping,export_type
-msgid "Invoices / Credit Notes"
-msgstr "Rechnungen / Gutschriften"
-
-#. module: mpi_bmd_import
-#: selection:bmd.header.mapping,export_type
-msgid "Contacts"
-msgstr "Kontakte"
-
-#. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_header_mapping__target_model
 msgid "Model"
 msgstr "Modell"
@@ -237,18 +133,6 @@ msgstr "Modell"
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_contact_export_wizard__export_format
 msgid "Format"
 msgstr "Format"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,export_format
-#: selection:bmd.contact.export.wizard,export_format
-msgid "CSV"
-msgstr "CSV"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,export_format
-#: selection:bmd.contact.export.wizard,export_format
-msgid "Excel"
-msgstr "Excel"
 
 #. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_invoice_export_wizard__date_from
@@ -266,44 +150,9 @@ msgid "Document Types"
 msgstr "Belegarten"
 
 #. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,move_types
-msgid "All (Invoices + Credit Notes)"
-msgstr "Alle (Rechnungen + Gutschriften)"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,move_types
-msgid "Customer Invoices only"
-msgstr "Nur Ausgangsrechnungen"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,move_types
-msgid "Customer Credit Notes only"
-msgstr "Nur Kundengutschriften"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,move_types
-msgid "Supplier Invoices only"
-msgstr "Nur Eingangsrechnungen"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,move_types
-msgid "Supplier Credit Notes only"
-msgstr "Nur Lieferantengutschriften"
-
-#. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_invoice_export_wizard__export_mode
 msgid "Export Mode"
 msgstr "Exportmodus"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,export_mode
-msgid "One row per account line"
-msgstr "Eine Zeile pro Buchungszeile"
-
-#. module: mpi_bmd_import
-#: selection:bmd.invoice.export.wizard,export_mode
-msgid "One row per invoice (Netto / Brutto / Steuer)"
-msgstr "Eine Zeile pro Rechnung (Netto / Brutto / Steuer)"
 
 #. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_invoice_export_wizard__include_pdfs
@@ -331,21 +180,6 @@ msgstr "Dateiname"
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_bmd_contact_export_wizard__partner_type
 msgid "Partner Type"
 msgstr "Partnertyp"
-
-#. module: mpi_bmd_import
-#: selection:bmd.contact.export.wizard,partner_type
-msgid "Customers only"
-msgstr "Nur Kunden"
-
-#. module: mpi_bmd_import
-#: selection:bmd.contact.export.wizard,partner_type
-msgid "Suppliers only"
-msgstr "Nur Lieferanten"
-
-#. module: mpi_bmd_import
-#: selection:bmd.contact.export.wizard,partner_type
-msgid "Customers and Suppliers"
-msgstr "Kunden und Lieferanten"
 
 #. module: mpi_bmd_import
 #: model:ir.model.fields,field_description:mpi_bmd_import.field_res_partner__bmd_matchcode

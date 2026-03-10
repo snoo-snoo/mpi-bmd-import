@@ -2,7 +2,7 @@
 
 {
     "name": "BMD Import/Export",
-    "version": "18.0.1.9.0",
+    "version": "18.0.1.10.0",
     "category": "Accounting/Accounting",
     "summary": "Odoo-Daten im BMD-kompatiblen CSV/Excel-Format für die österreichische Buchhaltung exportieren",
     "author": "MPI GmbH, Michael Plöckinger - www.mpi-erp.at",
