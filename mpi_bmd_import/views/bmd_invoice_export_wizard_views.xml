@@ -13,6 +13,7 @@
                         <field name="date_from"/>
                         <field name="date_to"/>
                         <field name="move_types"/>
+                        <field name="export_mode"/>
                     </group>
                 </group>
                 <group invisible="not data">
