@@ -1,30 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- BMD Export group under the Accounting app root menu -->
     <menuitem
         id="menu_bmd_root"
         name="BMD Export"
-        parent="account.menu_finance"
+        parent="account_accountant.menu_accounting"
         sequence="50"
-    />
-    <menuitem
-        id="menu_bmd_config"
-        name="Export Configuration"
-        parent="menu_bmd_root"
-        action="action_bmd_export_config"
-        sequence="10"
     />
     <menuitem
         id="menu_bmd_invoice_export"
         name="Export Invoices"
         parent="menu_bmd_root"
         action="action_bmd_invoice_export_wizard"
-        sequence="20"
+        sequence="10"
     />
     <menuitem
         id="menu_bmd_contact_export"
         name="Export Contacts"
         parent="menu_bmd_root"
         action="action_bmd_contact_export_wizard"
-        sequence="30"
+        sequence="20"
+    />
+
+    <!-- Configuration entry under Accounting > Configuration -->
+    <menuitem
+        id="menu_bmd_config"
+        name="BMD Export"
+        parent="account.menu_finance_configuration"
+        action="action_bmd_export_config"
+        sequence="90"
     />
 </odoo>
