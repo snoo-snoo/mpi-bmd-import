@@ -312,7 +312,7 @@ class BmdInvoiceExportWizard(models.TransientModel):
         encoding = self.config_id.encoding
 
         output = io.StringIO()
-        writer = csv.writer(output, delimiter=delimiter, quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(output, delimiter=delimiter, quoting=csv.QUOTE_ALL)
         for row in rows:
             writer.writerow(row)
 
