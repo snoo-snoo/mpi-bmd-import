@@ -68,10 +68,15 @@ class BmdInvoiceExportWizard(models.TransientModel):
         return res
 
     def _default_config(self):
-        """Return first config for current company only; no cross-company fallback."""
-        return self.env["bmd.export.config"].search(
+        """Return first config for current company; if none, use shared config (no company)."""
+        config = self.env["bmd.export.config"].search(
             [("company_id", "=", self.env.company.id)], limit=1
         )
+        if not config:
+            config = self.env["bmd.export.config"].search(
+                [("company_id", "=", False)], limit=1
+            )
+        return config
 
     def _get_moves(self):
         domain = [

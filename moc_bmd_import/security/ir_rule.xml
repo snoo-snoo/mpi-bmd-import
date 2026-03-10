@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="rule_bmd_export_config_company" model="ir.rule">
+            <field name="name">BMD Export Config: multi-company</field>
+            <field name="model_id" ref="model_bmd_export_config"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_bmd_header_mapping_company" model="ir.rule">
+            <field name="name">BMD Header Mapping: multi-company</field>
+            <field name="model_id" ref="model_bmd_header_mapping"/>
+            <field name="domain_force">['|', ('config_id.company_id', '=', False), ('config_id.company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>

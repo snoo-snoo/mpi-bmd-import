@@ -11,6 +11,7 @@
     "depends": ["account", "l10n_at"],
     "data": [
         "security/ir.model.access.csv",
+        "security/ir_rule.xml",
         "data/bmd_default_mappings.xml",
         "views/bmd_export_config_views.xml",
         "views/bmd_invoice_export_wizard_views.xml",
