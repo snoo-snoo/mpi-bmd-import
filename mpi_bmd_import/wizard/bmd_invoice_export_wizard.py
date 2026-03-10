@@ -6,7 +6,7 @@ import io
 import logging
 import re
 import zipfile
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from datetime import datetime
 
 from odoo import _, api, fields, models
@@ -145,13 +145,74 @@ class BmdInvoiceExportWizard(models.TransientModel):
         safe_name = self._sanitize_filename(move.name)
         return f"{symbol}_{safe_name}.pdf"
 
-    def _generate_move_pdf(self, move):
-        """Render the standard Odoo invoice report as PDF bytes."""
-        report = self.env["ir.actions.report"]
-        pdf_content, _content_type = report._render_qweb_pdf(
-            "account.account_invoices", [move.id],
+    def _collect_pdfs(self, moves):
+        """Batch-collect invoice PDFs, reusing cached report attachments.
+
+        Odoo's invoice report caches rendered PDFs as ir.attachment records.
+        This method retrieves cached ones in bulk (single query) and only
+        renders the remaining invoices in one batched wkhtmltopdf call
+        instead of one call per invoice.
+        """
+        report_ref = "account.account_invoices"
+        report = self.env["ir.actions.report"]._get_report(report_ref)
+        result = {}
+
+        cached_atts = self.env["ir.attachment"].search([
+            ("res_model", "=", "account.move"),
+            ("res_id", "in", moves.ids),
+            ("name", "=like", "%.pdf"),
+        ])
+        att_by_move = {}
+        for att in cached_atts:
+            att_by_move.setdefault(att.res_id, att)
+
+        to_render = self.env["account.move"]
+        for move in moves:
+            if move.id in att_by_move:
+                result[move.id] = b64decode(att_by_move[move.id].datas)
+            else:
+                to_render |= move
+
+        if not to_render:
+            _logger.info("BMD PDF export: all %d PDFs served from cache.", len(result))
+            return result
+
+        _logger.info(
+            "BMD PDF export: %d cached, %d to render.",
+            len(result), len(to_render),
         )
-        return pdf_content
+
+        try:
+            self.env["ir.actions.report"]._render_qweb_pdf(
+                report_ref, to_render.ids,
+            )
+            for move in to_render:
+                att = report._retrieve_attachment(move)
+                if att:
+                    result[move.id] = b64decode(att.datas)
+                else:
+                    _logger.warning(
+                        "PDF attachment not found for %s after batch render.",
+                        move.name,
+                    )
+        except Exception:
+            _logger.warning(
+                "Batch PDF render failed, falling back to individual rendering.",
+                exc_info=True,
+            )
+            for move in to_render:
+                try:
+                    pdf_content, _ = self.env["ir.actions.report"]._render_qweb_pdf(
+                        report_ref, [move.id],
+                    )
+                    result[move.id] = pdf_content
+                except Exception:
+                    _logger.warning(
+                        "Could not generate PDF for %s, skipping.",
+                        move.name, exc_info=True,
+                    )
+
+        return result
 
     def _get_bmd_sign(self, balance, is_sale, is_refund):
         """Apply BMD sign convention to a balance amount."""
@@ -345,18 +406,16 @@ class BmdInvoiceExportWizard(models.TransientModel):
         else:
             data_file = self._export_xlsx(moves)
 
+        pdf_map = self._collect_pdfs(moves)
+
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
             zf.writestr(f"bmd_buchungen.{ext}", data_file)
             for move in moves:
-                pdf_name = self._get_pdf_filename(move)
-                try:
-                    pdf_bytes = self._generate_move_pdf(move)
-                    zf.writestr(f"belege/{pdf_name}", pdf_bytes)
-                except Exception:
-                    _logger.warning(
-                        "Could not generate PDF for %s, skipping.",
-                        move.name, exc_info=True,
+                pdf_bytes = pdf_map.get(move.id)
+                if pdf_bytes:
+                    zf.writestr(
+                        f"belege/{self._get_pdf_filename(move)}", pdf_bytes,
                     )
         return buf.getvalue()
 
