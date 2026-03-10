@@ -5,6 +5,7 @@ import csv
 import io
 import logging
 import re
+import zipfile
 from base64 import b64encode
 from datetime import datetime
 
@@ -71,6 +72,12 @@ class BmdInvoiceExportWizard(models.TransientModel):
         default="per_invoice",
         required=True,
     )
+    include_pdfs = fields.Boolean(
+        string="Include PDF documents",
+        default=False,
+        help="Attach each invoice/credit note as PDF and add a beleglink "
+             "column to the CSV. Output becomes a ZIP archive.",
+    )
     data = fields.Binary(string="Generated File", readonly=True)
     filename = fields.Char(string="Filename", readonly=True)
 
@@ -130,6 +137,24 @@ class BmdInvoiceExportWizard(models.TransientModel):
             date_val = date_val.date()
         return date_val.strftime("%Y%m%d")
 
+    def _sanitize_filename(self, name):
+        """Turn an invoice name like 'INV/2024/0001' into 'INV_2024_0001'."""
+        return re.sub(r'[^\w\-.]', '_', str(name or "document").strip())
+
+    def _get_pdf_filename(self, move):
+        """Return a unique PDF filename for a move, e.g. 'AR_INV_2024_0001.pdf'."""
+        symbol = self._get_bmd_symbol(move)
+        safe_name = self._sanitize_filename(move.name)
+        return f"{symbol}_{safe_name}.pdf"
+
+    def _generate_move_pdf(self, move):
+        """Render the standard Odoo invoice report as PDF bytes."""
+        report = self.env["ir.actions.report"]
+        pdf_content, _content_type = report._render_qweb_pdf(
+            "account.account_invoices", [move.id],
+        )
+        return pdf_content
+
     def _get_bmd_sign(self, balance, is_sale, is_refund):
         """Apply BMD sign convention to a balance amount."""
         if is_sale and not is_refund:
@@ -170,7 +195,7 @@ class BmdInvoiceExportWizard(models.TransientModel):
         partner = move.partner_id
         inv_date = move.invoice_date or move.date
         last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
-        return {
+        vals = {
             "belegnr": self._get_belegnr_numeric(move.name),
             "belegdat": self._date_to_bmd(move.invoice_date),
             "extbelegnr": (move.ref or "")[:20],
@@ -182,6 +207,9 @@ class BmdInvoiceExportWizard(models.TransientModel):
             "symbol": self._get_bmd_symbol(move),
             "buchdat": self._date_to_bmd(inv_date.replace(day=last_day)),
         }
+        if self.include_pdfs:
+            vals["beleglink"] = f"belege/{self._get_pdf_filename(move)}"
+        return vals
 
     def _get_move_line_data(self, move):
         """
@@ -245,28 +273,33 @@ class BmdInvoiceExportWizard(models.TransientModel):
             return self._get_move_summary_data(move)
         return self._get_move_line_data(move)
 
-    def _build_csv_rows(self, moves):
-        """Build Buchungen rows with header."""
+    def _get_columns(self):
+        """Return ordered column list for the CSV header."""
         mappings = self.config_id.header_mapping_ids.filtered(
             lambda m: m.export_type == "invoices"
         ).sorted("sequence")
-        if not mappings:
-            if self.export_mode == "per_invoice":
-                columns = [
-                    "belegnr", "belegdat", "extbelegnr", "netto", "brutto",
-                    "steuer", "bucod", "steucod", "gkto", "konto", "mwst",
-                    "text", "gegenbuchkz", "verbuchkz", "kost", "symbol",
-                    "buchdat",
-                ]
-            else:
-                columns = [
-                    "belegnr", "belegdat", "extbelegnr", "betrag", "bucod",
-                    "steucod", "gkto", "konto", "mwst", "steuer", "text",
-                    "gegenbuchkz", "verbuchkz", "kost", "symbol", "buchdat",
-                ]
-        else:
+        if mappings:
             columns = [m.bmd_field_name for m in mappings]
+        elif self.export_mode == "per_invoice":
+            columns = [
+                "belegnr", "belegdat", "extbelegnr", "netto", "brutto",
+                "steuer", "bucod", "steucod", "gkto", "konto", "mwst",
+                "text", "gegenbuchkz", "verbuchkz", "kost", "symbol",
+                "buchdat",
+            ]
+        else:
+            columns = [
+                "belegnr", "belegdat", "extbelegnr", "betrag", "bucod",
+                "steucod", "gkto", "konto", "mwst", "steuer", "text",
+                "gegenbuchkz", "verbuchkz", "kost", "symbol", "buchdat",
+            ]
+        if self.include_pdfs and "beleglink" not in columns:
+            columns.append("beleglink")
+        return columns
 
+    def _build_csv_rows(self, moves):
+        """Build Buchungen rows with header."""
+        columns = self._get_columns()
         rows = [columns]
         for move in moves:
             for row_data in self._get_row_data(move):
@@ -306,6 +339,29 @@ class BmdInvoiceExportWizard(models.TransientModel):
         wb.save(output)
         return output.getvalue()
 
+    def _export_zip(self, moves):
+        """Bundle CSV/XLSX + individual invoice PDFs into a ZIP archive."""
+        ext = "csv" if self.export_format == "csv" else "xlsx"
+        if self.export_format == "csv":
+            data_file = self._export_csv(moves)
+        else:
+            data_file = self._export_xlsx(moves)
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(f"bmd_buchungen.{ext}", data_file)
+            for move in moves:
+                pdf_name = self._get_pdf_filename(move)
+                try:
+                    pdf_bytes = self._generate_move_pdf(move)
+                    zf.writestr(f"belege/{pdf_name}", pdf_bytes)
+                except Exception:
+                    _logger.warning(
+                        "Could not generate PDF for %s, skipping.",
+                        move.name, exc_info=True,
+                    )
+        return buf.getvalue()
+
     def action_export(self):
         self.ensure_one()
         if not self.config_id:
@@ -326,24 +382,22 @@ class BmdInvoiceExportWizard(models.TransientModel):
             )
 
         _logger.info(
-            "BMD invoice export: %d moves, %s–%s, format=%s, user=%s",
+            "BMD invoice export: %d moves, %s–%s, format=%s, pdfs=%s, user=%s",
             len(moves), self.date_from, self.date_to,
-            self.export_format, self.env.user.login,
+            self.export_format, self.include_pdfs, self.env.user.login,
         )
 
-        if self.export_format == "csv":
+        if self.include_pdfs:
+            data = self._export_zip(moves)
+            filename = "bmd_buchungen.zip"
+        elif self.export_format == "csv":
             data = self._export_csv(moves)
-            ext = "csv"
+            filename = "bmd_buchungen.csv"
         else:
             data = self._export_xlsx(moves)
-            ext = "xlsx"
+            filename = "bmd_buchungen.xlsx"
 
-        self.write(
-            {
-                "data": b64encode(data),
-                "filename": f"bmd_buchungen.{ext}",
-            }
-        )
+        self.write({"data": b64encode(data), "filename": filename})
         return {
             "type": "ir.actions.act_window",
             "res_model": self._name,
