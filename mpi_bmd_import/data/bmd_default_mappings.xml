@@ -30,93 +30,100 @@
             <field name="odoo_field_name">ref</field>
             <field name="export_type">invoices</field>
         </record>
-        <record id="bmd_mapping_betrag" model="bmd.header.mapping">
+        <record id="bmd_mapping_netto" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">4</field>
-            <field name="bmd_field_name">betrag</field>
-            <field name="odoo_field_name">balance</field>
+            <field name="bmd_field_name">netto</field>
+            <field name="odoo_field_name">netto</field>
+            <field name="export_type">invoices</field>
+        </record>
+        <record id="bmd_mapping_brutto" model="bmd.header.mapping">
+            <field name="config_id" ref="bmd_export_config_default"/>
+            <field name="sequence">5</field>
+            <field name="bmd_field_name">brutto</field>
+            <field name="odoo_field_name">brutto</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_bucod" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">5</field>
+            <field name="sequence">6</field>
             <field name="bmd_field_name">bucod</field>
             <field name="odoo_field_name">bucod</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_steucod" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">6</field>
+            <field name="sequence">7</field>
             <field name="bmd_field_name">steucod</field>
             <field name="odoo_field_name">steucod</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_gkto" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">7</field>
+            <field name="sequence">8</field>
             <field name="bmd_field_name">gkto</field>
             <field name="odoo_field_name">gkto</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_konto" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">8</field>
+            <field name="sequence">9</field>
             <field name="bmd_field_name">konto</field>
             <field name="odoo_field_name">account_id</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_mwst" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">9</field>
+            <field name="sequence">10</field>
             <field name="bmd_field_name">mwst</field>
             <field name="odoo_field_name">mwst</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_steuer" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">10</field>
+            <field name="sequence">11</field>
             <field name="bmd_field_name">steuer</field>
             <field name="odoo_field_name">tax_amount</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_text" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">11</field>
+            <field name="sequence">12</field>
             <field name="bmd_field_name">text</field>
             <field name="odoo_field_name">name</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_gegenbuchkz" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">12</field>
+            <field name="sequence">13</field>
             <field name="bmd_field_name">gegenbuchkz</field>
             <field name="odoo_field_name">gegenbuchkz</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_verbuchkz" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">13</field>
+            <field name="sequence">14</field>
             <field name="bmd_field_name">verbuchkz</field>
             <field name="odoo_field_name">verbuchkz</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_kost" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">14</field>
+            <field name="sequence">15</field>
             <field name="bmd_field_name">kost</field>
             <field name="odoo_field_name">kost</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_symbol" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">15</field>
+            <field name="sequence">16</field>
             <field name="bmd_field_name">symbol</field>
             <field name="odoo_field_name">symbol</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_buchdat" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
-            <field name="sequence">16</field>
+            <field name="sequence">17</field>
             <field name="bmd_field_name">buchdat</field>
             <field name="odoo_field_name">date</field>
             <field name="export_type">invoices</field>
