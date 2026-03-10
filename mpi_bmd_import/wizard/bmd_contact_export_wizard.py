@@ -95,12 +95,12 @@ class BmdContactExportWizard(models.TransientModel):
         return getattr(partner, field_name, "") or ""
 
     def _build_csv_rows(self, partners):
-        """Build Personenkonten rows. No header row per BMD pr08i config."""
+        """Build Personenkonten rows with header."""
         mappings = self._get_contact_mappings()
         if not mappings:
             return []
 
-        rows = []
+        rows = [[m.bmd_field_name for m in mappings]]
         for partner in partners:
             row = []
             for mapping in mappings:
