@@ -60,6 +60,15 @@ class BmdInvoiceExportWizard(models.TransientModel):
         default="all",
         required=True,
     )
+    export_mode = fields.Selection(
+        [
+            ("per_line", "One row per account line"),
+            ("per_invoice", "One row per invoice (Netto / Brutto / Steuer)"),
+        ],
+        string="Export Mode",
+        default="per_invoice",
+        required=True,
+    )
     data = fields.Binary(string="Generated File", readonly=True)
     filename = fields.Char(string="Filename", readonly=True)
 
@@ -119,16 +128,20 @@ class BmdInvoiceExportWizard(models.TransientModel):
             date_val = date_val.date()
         return date_val.strftime("%Y%m%d")
 
-    def _get_move_line_data(self, move):
-        """
-        Extract BMD-relevant data from a move.
-        Returns one row per revenue/expense line (correct accounting per account).
-        Tax total is attributed to the first row only to avoid double-counting.
-        """
-        symbol = self._get_bmd_symbol(move)
+    def _get_bmd_sign(self, balance, is_sale, is_refund):
+        """Apply BMD sign convention to a balance amount."""
+        if is_sale and not is_refund:
+            return -abs(balance)
+        elif is_sale and is_refund:
+            return abs(balance)
+        elif not is_sale and not is_refund:
+            return abs(balance)
+        return -abs(balance)
+
+    def _get_main_and_tax_lines(self, move):
+        """Return (main_lines, tax_lines, is_sale, is_refund) for a move."""
         is_refund = move.move_type in ("out_refund", "in_refund")
         is_sale = move.move_type in ("out_invoice", "out_refund")
-
         income_lines = move.line_ids.filtered(
             lambda l: l.account_id.account_type in _SALE_ACCOUNT_TYPES
         )
@@ -136,84 +149,99 @@ class BmdInvoiceExportWizard(models.TransientModel):
             lambda l: l.account_id.account_type in _PURCHASE_ACCOUNT_TYPES
         )
         tax_lines = move.line_ids.filtered(lambda l: l.tax_line_id)
+        main_lines = income_lines if is_sale else expense_lines
+        return main_lines, tax_lines, is_sale, is_refund
 
-        if is_sale:
-            main_lines = income_lines
-        else:
-            main_lines = expense_lines
+    def _collect_tax_rates(self, lines):
+        """Return the aggregated MwSt value across all lines."""
+        all_rates = set()
+        for line in lines:
+            for tax in line.tax_ids:
+                if tax.amount_type == "percent":
+                    all_rates.add(int(tax.amount))
+        if len(all_rates) > 1:
+            return BMD_STEUCOD_MIXED
+        return all_rates.pop() if all_rates else 0
 
+    def _get_common_fields(self, move, is_sale, is_refund):
+        """Return dict of fields shared by both export modes."""
+        partner = move.partner_id
+        inv_date = move.invoice_date or move.date
+        last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
+        return {
+            "belegnr": self._get_belegnr_numeric(move.name),
+            "belegdat": self._date_to_bmd(move.invoice_date),
+            "extbelegnr": (move.ref or "")[:20],
+            "steucod": str(self._get_bmd_steucod(move)),
+            "gkto": partner.bmd_kontonummer if partner else "",
+            "gegenbuchkz": "E",
+            "verbuchkz": "A",
+            "kost": self._get_belegnr_numeric(move.name),
+            "symbol": self._get_bmd_symbol(move),
+            "buchdat": self._date_to_bmd(inv_date.replace(day=last_day)),
+        }
+
+    def _get_move_line_data(self, move):
+        """
+        One row per revenue/expense line (correct accounting per account).
+        Tax total is attributed to the first row only to avoid double-counting.
+        """
+        main_lines, tax_lines, is_sale, is_refund = self._get_main_and_tax_lines(move)
         if not main_lines:
             return []
 
-        tax_balance = sum(tax_lines.mapped("balance"))
-        # BMD sign: AR revenue / ER-Gutschrift = negative; ER / AR-Gutschrift = positive
-        if is_sale and not is_refund:
-            tax_balance = -abs(tax_balance)
-        elif is_sale and is_refund:
-            tax_balance = abs(tax_balance)
-        elif not is_sale and not is_refund:
-            tax_balance = abs(tax_balance)
-        else:
-            tax_balance = -abs(tax_balance)
-
-        partner = move.partner_id
-        gkto = partner.bmd_kontonummer if partner else ""
-        steucod = self._get_bmd_steucod(move)
-
-        inv_date = move.invoice_date or move.date
-        last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
-        buchdat = inv_date.replace(day=last_day)
+        tax_balance = self._get_bmd_sign(
+            sum(tax_lines.mapped("balance")), is_sale, is_refund,
+        )
+        common = self._get_common_fields(move, is_sale, is_refund)
 
         result = []
         for idx, line in enumerate(main_lines):
-            net_balance = line.balance
-            if is_sale and not is_refund:
-                net_balance = -abs(net_balance)
-            elif is_sale and is_refund:
-                net_balance = abs(net_balance)
-            elif not is_sale and not is_refund:
-                net_balance = abs(net_balance)
-            else:
-                net_balance = -abs(net_balance)
-
-            bucod = 2 if net_balance < 0 else 1
-            account = line.account_id
-            konto = account.code or str(account.id)
-
-            line_tax_rates = set()
-            for tax in line.tax_ids:
-                if tax.amount_type == "percent":
-                    line_tax_rates.add(int(tax.amount))
-            if len(line_tax_rates) > 1:
-                mwst = BMD_STEUCOD_MIXED
-            elif line_tax_rates:
-                mwst = list(line_tax_rates)[0]
-            else:
-                mwst = 0
-
-            # Full tax amount on first line only; 0 on subsequent lines
+            net_balance = self._get_bmd_sign(line.balance, is_sale, is_refund)
+            mwst = self._collect_tax_rates(line)
             line_tax = tax_balance if idx == 0 else 0.0
-            text = (line.name or move.name or "")[:50]
 
             result.append({
-                "belegnr": self._get_belegnr_numeric(move.name),
-                "belegdat": self._date_to_bmd(move.invoice_date),
-                "extbelegnr": (move.ref or "")[:20],
+                **common,
                 "betrag": f"{net_balance:.2f}".replace(".", ","),
-                "bucod": str(bucod),
-                "steucod": str(steucod),
-                "gkto": gkto,
-                "konto": konto,
+                "bucod": str(2 if net_balance < 0 else 1),
+                "konto": line.account_id.code or str(line.account_id.id),
                 "mwst": str(mwst),
                 "steuer": f"{line_tax:.2f}".replace(".", ","),
-                "text": text,
-                "gegenbuchkz": "E",
-                "verbuchkz": "A",
-                "kost": self._get_belegnr_numeric(move.name),
-                "symbol": symbol,
-                "buchdat": self._date_to_bmd(buchdat),
+                "text": (line.name or move.name or "")[:50],
             })
         return result
+
+    def _get_move_summary_data(self, move):
+        """One aggregated row per invoice with netto, brutto, and steuer."""
+        main_lines, tax_lines, is_sale, is_refund = self._get_main_and_tax_lines(move)
+        if not main_lines:
+            return []
+
+        netto = self._get_bmd_sign(sum(main_lines.mapped("balance")), is_sale, is_refund)
+        steuer = self._get_bmd_sign(sum(tax_lines.mapped("balance")), is_sale, is_refund)
+        brutto = netto + steuer
+
+        primary_line = max(main_lines, key=lambda l: abs(l.balance))
+        common = self._get_common_fields(move, is_sale, is_refund)
+
+        return [{
+            **common,
+            "netto": f"{netto:.2f}".replace(".", ","),
+            "brutto": f"{brutto:.2f}".replace(".", ","),
+            "betrag": f"{netto:.2f}".replace(".", ","),
+            "bucod": str(2 if netto < 0 else 1),
+            "konto": primary_line.account_id.code or str(primary_line.account_id.id),
+            "mwst": str(self._collect_tax_rates(main_lines)),
+            "steuer": f"{steuer:.2f}".replace(".", ","),
+            "text": (move.ref or move.name or "")[:50],
+        }]
+
+    def _get_row_data(self, move):
+        """Dispatch to per-line or per-invoice depending on export_mode."""
+        if self.export_mode == "per_invoice":
+            return self._get_move_summary_data(move)
+        return self._get_move_line_data(move)
 
     def _build_csv_rows(self, moves):
         """Build Buchungen rows with header."""
@@ -221,18 +249,25 @@ class BmdInvoiceExportWizard(models.TransientModel):
             lambda m: m.export_type == "invoices"
         ).sorted("sequence")
         if not mappings:
-            # Fallback: use default column order
-            columns = [
-                "belegnr", "belegdat", "extbelegnr", "betrag", "bucod", "steucod",
-                "gkto", "konto", "mwst", "steuer", "text", "gegenbuchkz",
-                "verbuchkz", "kost", "symbol", "buchdat",
-            ]
+            if self.export_mode == "per_invoice":
+                columns = [
+                    "belegnr", "belegdat", "extbelegnr", "netto", "brutto",
+                    "steuer", "bucod", "steucod", "gkto", "konto", "mwst",
+                    "text", "gegenbuchkz", "verbuchkz", "kost", "symbol",
+                    "buchdat",
+                ]
+            else:
+                columns = [
+                    "belegnr", "belegdat", "extbelegnr", "betrag", "bucod",
+                    "steucod", "gkto", "konto", "mwst", "steuer", "text",
+                    "gegenbuchkz", "verbuchkz", "kost", "symbol", "buchdat",
+                ]
         else:
             columns = [m.bmd_field_name for m in mappings]
 
         rows = [columns]
         for move in moves:
-            for row_data in self._get_move_line_data(move):
+            for row_data in self._get_row_data(move):
                 row = [row_data.get(col, "") for col in columns]
                 rows.append(row)
         return rows
