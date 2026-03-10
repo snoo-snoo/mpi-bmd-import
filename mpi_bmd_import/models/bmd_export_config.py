@@ -24,8 +24,8 @@ class BmdExportConfig(models.Model):
             ("comma", "Comma"),
         ],
         string="CSV Delimiter",
-        default="tab",
-        help="BMD prefers Tab to avoid issues with commas/semicolons in names",
+        default="semicolon",
+        help="BMD standard delimiter; all field values are double-quoted.",
     )
     encoding = fields.Selection(
         [

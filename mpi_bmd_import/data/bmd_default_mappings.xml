@@ -4,7 +4,7 @@
         <!-- Default BMD Export Config -->
         <record id="bmd_export_config_default" model="bmd.export.config">
             <field name="name">Default BMD Export</field>
-            <field name="delimiter">tab</field>
+            <field name="delimiter">semicolon</field>
             <field name="encoding">utf-8</field>
         </record>
 
