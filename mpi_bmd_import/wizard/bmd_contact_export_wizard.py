@@ -79,20 +79,45 @@ class BmdContactExportWizard(models.TransientModel):
     def _get_contact_mappings(self):
         return self.config_id.header_mapping_ids.filtered(
             lambda m: m.export_type == "contacts"
+            and m.bmd_field_name
+            and m.odoo_field_name
         ).sorted("sequence")
 
     def _get_partner_value(self, partner, field_name):
-        """Get value for a partner field, handling special cases."""
+        """Get value for a partner field, handling relational dot-paths.
+
+        Supports ``field.subfield`` notation so mappings like
+        ``property_account_receivable_id.id`` or
+        ``property_account_receivable_id.display_name`` work out of the box.
+        Plain Many2one fields without a sub-field resolve to display_name.
+        """
         if field_name == "country_id":
             return partner.country_id.code or ""
-        if field_name not in partner._fields:
+
+        parts = field_name.split(".", 1)
+        base_field = parts[0]
+
+        if base_field not in partner._fields:
             _logger.warning(
                 "BMD contact export: field '%s' not found on res.partner, "
                 "returning empty value.",
                 field_name,
             )
             return ""
-        return getattr(partner, field_name, "") or ""
+
+        value = getattr(partner, base_field, False)
+
+        if len(parts) == 2:
+            if not value:
+                return ""
+            sub_val = getattr(value, parts[1], "")
+            return sub_val if sub_val is not None else ""
+
+        field_def = partner._fields.get(base_field)
+        if field_def and field_def.type == "many2one" and value:
+            return value.display_name or ""
+
+        return value if value not in (None, False) else ""
 
     def _build_csv_rows(self, partners):
         """Build Personenkonten rows with header."""
