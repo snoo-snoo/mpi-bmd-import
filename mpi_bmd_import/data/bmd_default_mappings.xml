@@ -200,5 +200,19 @@
             <field name="odoo_field_name">vat</field>
             <field name="export_type">contacts</field>
         </record>
+        <record id="bmd_mapping_debitorenkonto_id" model="bmd.header.mapping">
+            <field name="config_id" ref="bmd_export_config_default"/>
+            <field name="sequence">9</field>
+            <field name="bmd_field_name">Debitorenkonto-ID</field>
+            <field name="odoo_field_name">property_account_receivable_id.id</field>
+            <field name="export_type">contacts</field>
+        </record>
+        <record id="bmd_mapping_debitorenkonto" model="bmd.header.mapping">
+            <field name="config_id" ref="bmd_export_config_default"/>
+            <field name="sequence">10</field>
+            <field name="bmd_field_name">Debitorenkonto</field>
+            <field name="odoo_field_name">property_account_receivable_id.display_name</field>
+            <field name="export_type">contacts</field>
+        </record>
     </data>
 </odoo>

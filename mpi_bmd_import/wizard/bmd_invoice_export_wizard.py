@@ -354,6 +354,8 @@ class BmdInvoiceExportWizard(models.TransientModel):
         """Return ordered column list for the CSV header."""
         mappings = self.config_id.header_mapping_ids.filtered(
             lambda m: m.export_type == "invoices"
+            and m.bmd_field_name
+            and m.odoo_field_name
         ).sorted("sequence")
         if mappings:
             columns = [m.bmd_field_name for m in mappings]
