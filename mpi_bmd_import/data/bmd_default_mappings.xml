@@ -13,28 +13,28 @@
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">1</field>
             <field name="bmd_field_name">belegnr</field>
-            <field name="odoo_field_name">name</field>
+            <field name="odoo_field_name">belegnr</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_rechnungsnr" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">2</field>
             <field name="bmd_field_name">rechnungsnr</field>
-            <field name="odoo_field_name">name</field>
+            <field name="odoo_field_name">rechnungsnr</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_belegdat" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">3</field>
             <field name="bmd_field_name">belegdat</field>
-            <field name="odoo_field_name">invoice_date</field>
+            <field name="odoo_field_name">belegdat</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_extbelegnr" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">4</field>
             <field name="bmd_field_name">extbelegnr</field>
-            <field name="odoo_field_name">ref</field>
+            <field name="odoo_field_name">extbelegnr</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_netto" model="bmd.header.mapping">
@@ -83,7 +83,7 @@
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">11</field>
             <field name="bmd_field_name">konto</field>
-            <field name="odoo_field_name">account_id</field>
+            <field name="odoo_field_name">konto</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_mwst" model="bmd.header.mapping">
@@ -97,14 +97,14 @@
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">13</field>
             <field name="bmd_field_name">steuer</field>
-            <field name="odoo_field_name">tax_amount</field>
+            <field name="odoo_field_name">steuer</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_text" model="bmd.header.mapping">
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">14</field>
             <field name="bmd_field_name">text</field>
-            <field name="odoo_field_name">name</field>
+            <field name="odoo_field_name">text</field>
             <field name="export_type">invoices</field>
         </record>
         <record id="bmd_mapping_gegenbuchkz" model="bmd.header.mapping">
@@ -139,7 +139,7 @@
             <field name="config_id" ref="bmd_export_config_default"/>
             <field name="sequence">19</field>
             <field name="bmd_field_name">buchdat</field>
-            <field name="odoo_field_name">date</field>
+            <field name="odoo_field_name">buchdat</field>
             <field name="export_type">invoices</field>
         </record>
 

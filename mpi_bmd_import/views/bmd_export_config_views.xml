@@ -20,8 +20,10 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="bmd_field_name"/>
-                                    <field name="odoo_field_name"/>
                                     <field name="export_type"/>
+                                    <field name="target_model" column_invisible="1"/>
+                                    <field name="odoo_field_id" optional="show"/>
+                                    <field name="odoo_field_name"/>
                                 </list>
                             </field>
                         </page>

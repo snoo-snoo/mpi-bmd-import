@@ -19,7 +19,9 @@ BMD_STEUCOD_PURCHASE = 0
 BMD_STEUCOD_MIXED = 88
 
 _SALE_ACCOUNT_TYPES = ("income", "income_other")
-_PURCHASE_ACCOUNT_TYPES = ("expense", "expense_depreciation", "expense_direct_cost")
+_PURCHASE_ACCOUNT_TYPES = (
+    "expense", "expense_other", "expense_depreciation", "expense_direct_cost",
+)
 
 _TEXT_COLUMNS = frozenset({
     "rechnungsnr", "extbelegnr", "text", "gegenbuchkz", "verbuchkz",
@@ -265,8 +267,21 @@ class BmdInvoiceExportWizard(models.TransientModel):
             account = partner.property_account_payable_id
         return account.code if account else ""
 
+    def _get_invoice_mappings(self):
+        """Return filtered and sorted invoice header mappings."""
+        return self.config_id.header_mapping_ids.filtered(
+            lambda m: m.export_type == "invoices"
+            and m.bmd_field_name
+            and m.odoo_field_name
+        ).sorted("sequence")
+
     def _get_common_fields(self, move, is_sale, is_refund):
-        """Return dict of fields shared by both export modes."""
+        """Return dict of fields shared by both export modes.
+
+        Keys include both canonical BMD names and ``odoo_field_name``
+        aliases so that user-renamed ``bmd_field_name`` columns still
+        resolve correctly via the enrichment step in ``_build_csv_rows``.
+        """
         partner = move.partner_id
         inv_date = move.invoice_date or move.date
         last_day = calendar.monthrange(inv_date.year, inv_date.month)[1]
@@ -284,6 +299,9 @@ class BmdInvoiceExportWizard(models.TransientModel):
             "symbol": self._get_bmd_symbol(move),
             "buchdat": self._date_to_bmd(inv_date.replace(day=last_day)),
         }
+        vals["invoice_date"] = vals["belegdat"]
+        vals["ref"] = vals["extbelegnr"]
+        vals["date"] = vals["buchdat"]
         if self.include_pdfs:
             vals["beleglink"] = f"belege/{self._get_pdf_filename(move)}"
         return vals
@@ -308,15 +326,20 @@ class BmdInvoiceExportWizard(models.TransientModel):
             mwst = self._collect_tax_rates(line)
             line_tax = tax_balance if idx == 0 else 0.0
 
-            result.append({
+            konto_val = line.account_id.code or str(line.account_id.id)
+            steuer_val = f"{line_tax:.2f}".replace(".", ",")
+            row = {
                 **common,
                 "betrag": f"{net_balance:.2f}".replace(".", ","),
                 "bucod": str(2 if net_balance < 0 else 1),
-                "konto": line.account_id.code or str(line.account_id.id),
+                "konto": konto_val,
+                "account_id": konto_val,
                 "mwst": str(mwst),
-                "steuer": f"{line_tax:.2f}".replace(".", ","),
+                "steuer": steuer_val,
+                "tax_amount": steuer_val,
                 "text": (line.name or move.name or "")[:50],
-            })
+            }
+            result.append(row)
         return result
 
     def _get_move_summary_data(self, move):
@@ -332,15 +355,19 @@ class BmdInvoiceExportWizard(models.TransientModel):
         primary_line = max(main_lines, key=lambda l: abs(l.balance))
         common = self._get_common_fields(move, is_sale, is_refund)
 
+        konto_val = primary_line.account_id.code or str(primary_line.account_id.id)
+        steuer_val = f"{steuer:.2f}".replace(".", ",")
         return [{
             **common,
             "netto": f"{netto:.2f}".replace(".", ","),
             "brutto": f"{brutto:.2f}".replace(".", ","),
             "betrag": f"{netto:.2f}".replace(".", ","),
             "bucod": str(2 if netto < 0 else 1),
-            "konto": primary_line.account_id.code or str(primary_line.account_id.id),
+            "konto": konto_val,
+            "account_id": konto_val,
             "mwst": str(self._collect_tax_rates(main_lines)),
-            "steuer": f"{steuer:.2f}".replace(".", ","),
+            "steuer": steuer_val,
+            "tax_amount": steuer_val,
             "text": (move.ref or move.name or "")[:50],
         }]
 
@@ -352,11 +379,7 @@ class BmdInvoiceExportWizard(models.TransientModel):
 
     def _get_columns(self):
         """Return ordered column list for the CSV header."""
-        mappings = self.config_id.header_mapping_ids.filtered(
-            lambda m: m.export_type == "invoices"
-            and m.bmd_field_name
-            and m.odoo_field_name
-        ).sorted("sequence")
+        mappings = self._get_invoice_mappings()
         if mappings:
             columns = [m.bmd_field_name for m in mappings]
         elif self.export_mode == "per_invoice":
@@ -378,11 +401,23 @@ class BmdInvoiceExportWizard(models.TransientModel):
         return columns
 
     def _build_csv_rows(self, moves):
-        """Build Buchungen rows with header."""
+        """Build Buchungen rows with header.
+
+        When user-configured mappings exist, the row data dict is
+        enriched with ``bmd_field_name`` aliases derived from each
+        mapping's ``odoo_field_name``.  This allows users to freely
+        rename CSV column headers without breaking the data lookup.
+        """
+        mappings = self._get_invoice_mappings()
         columns = self._get_columns()
         rows = [columns]
         for move in moves:
             for row_data in self._get_row_data(move):
+                if mappings:
+                    for m in mappings:
+                        if (m.odoo_field_name in row_data
+                                and m.bmd_field_name not in row_data):
+                            row_data[m.bmd_field_name] = row_data[m.odoo_field_name]
                 row = [row_data.get(col, "") for col in columns]
                 rows.append(row)
         return rows
@@ -397,20 +432,24 @@ class BmdInvoiceExportWizard(models.TransientModel):
 
     def _export_csv(self, moves):
         """Export to CSV with header row. Text columns are quoted, numbers are not."""
+        mappings = self._get_invoice_mappings()
         columns = self._get_columns()
         rows = self._build_csv_rows(moves)
         delimiter = self.config_id.get_delimiter_char()
         encoding = self.config_id.encoding
 
+        text_cols = set(_TEXT_COLUMNS)
+        for m in mappings:
+            if m.odoo_field_name in _TEXT_COLUMNS or m.bmd_field_name in _TEXT_COLUMNS:
+                text_cols.add(m.bmd_field_name)
+
         lines = []
-        header = delimiter.join(
-            f'"{col}"' for col in columns
-        )
+        header = delimiter.join(f'"{col}"' for col in columns)
         lines.append(header)
 
         for row in rows[1:]:
             cells = [
-                self._format_csv_value(val, col in _TEXT_COLUMNS)
+                self._format_csv_value(val, col in text_cols)
                 for col, val in zip(columns, row)
             ]
             lines.append(delimiter.join(cells))
